@@ -206,6 +206,9 @@
     <PackageReference Include="OpenCvSharp4">
       <Version>4.5.3.20211228</Version>
     </PackageReference>
+    <PackageReference Include="Otp.NET">
+      <Version>1.2.2</Version>
+    </PackageReference>
     <PackageReference Include="SQLitePCLRaw.bundle_sqlcipher">
       <Version>1.1.14</Version>
     </PackageReference>

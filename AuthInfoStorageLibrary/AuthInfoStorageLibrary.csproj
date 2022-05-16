@@ -7,8 +7,8 @@
     <ProjectGuid>{8C6F71C5-73F2-47C4-941F-E451EDFABE65}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>AuthInfoStorage</RootNamespace>
-    <AssemblyName>AuthInfoStorage</AssemblyName>
+    <RootNamespace>AuthInfoStorageLibrary</RootNamespace>
+    <AssemblyName>AuthInfoStorageLibrary</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
     <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.22000.0</TargetPlatformVersion>
@@ -121,6 +121,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AuthInfoStorage.cs" />
+    <Compile Include="OTPInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\OTPKeyStorage.rd.xml" />
   </ItemGroup>
@@ -130,6 +131,9 @@
     </PackageReference>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.2.13</Version>
+    </PackageReference>
+    <PackageReference Include="Otp.NET">
+      <Version>1.2.2</Version>
     </PackageReference>
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlcipher">
       <Version>2.0.7</Version>

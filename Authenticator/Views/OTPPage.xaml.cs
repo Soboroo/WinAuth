@@ -10,6 +10,7 @@ using Windows.Storage.Streams;
 using System.Threading.Tasks;
 using Windows.Storage;
 using WinAuth.Utils;
+using AuthInfoStorageLibrary;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -54,13 +55,104 @@ namespace WinAuth.Views
                 if (dataPackageView.Contains(StandardDataFormats.Bitmap))
                 {
                     Debug.WriteLine("Screenshot copied to clipboard");
-                    VerifyQR(Clipboard.GetContent());
+                    AddOTPInfo(Clipboard.GetContent());
                 }
                 Window.Current.Activated -= SnippingToolOpened;
             }
         }
+
+        private async void AddOTPInfo(DataPackageView clipboard)
+        {
+            try
+            {
+                Uri otpUri = await GetOTPUriFromScreenshot(clipboard);
+                OTPInfo info = GetOTPInfoFromUri(otpUri);
+                try
+                {
+                    AuthInfoStorage.AddOTPInfoToStorage(info);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                }
+            }
+            catch (Exception e)
+            {
+                if (e.Message == "Not a valid otpauth URI")
+                {
+                    var dialog = new ContentDialog()
+                    {
+                        Title = "Invalid QR code",
+                        Content = "Found QR code but, it's not OTP QR code. Check your image if it is correct QR code.",
+                        CloseButtonText = "Ok"
+                    };
+                    await dialog.ShowAsync();
+                }
+                else if (e.Message == "Failed to detect QR code")
+                {
+                    var dialog = new ContentDialog()
+                    {
+                        Title = "Failed to Detect QR code",
+                        Content = "Cannot found QR Code in captured image. Check your image and try again. Zooming in the QR code could help to detect well",
+                        CloseButtonText = "Ok"
+                    };
+                    await dialog.ShowAsync();
+                }
+                else
+                {
+                    var dialog = new ContentDialog()
+                    {
+                        Title = "Error",
+                        Content = "Error while reading QR code. Please try again.",
+                        CloseButtonText = "Ok"
+                    };
+                    await dialog.ShowAsync();
+                }
+
+            }
+            finally
+            {
+                // restore clipboard
+                Clipboard.SetContent(data);
+            }
+        }
         
-        private async void VerifyQR(DataPackageView clipboard)
+        private OTPInfo GetOTPInfoFromUri(Uri otpUri)
+        {
+            OTPInfo otpInfo = new OTPInfo();
+            otpInfo.Type = Uri.UnescapeDataString(otpUri.Host);
+            otpInfo.Label = Uri.UnescapeDataString(otpUri.Segments[1]);
+            char[] delimiterChars = { '?', '&' };
+            string[] querys = Uri.UnescapeDataString(otpUri.Query).Split(delimiterChars, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var query in querys)
+            {
+                string[] value = query.Split('=');
+                switch (value[0])
+                {
+                    case "secret":
+                        otpInfo.Secret = value[1];
+                        break;
+                    case "issuer":
+                        otpInfo.Issuer = value[1];
+                        break;
+                    case "algorithm":
+                        otpInfo.Algorithm = value[1];
+                        break;
+                    case "digits":
+                        otpInfo.Digits = value[1];
+                        break;
+                    case "period":
+                        otpInfo.Period = value[1];
+                        break;
+                    case "counter":
+                        otpInfo.Counter = value[1];
+                        break;
+                }
+            }
+            return otpInfo;
+        }
+        
+        private async Task<Uri> GetOTPUriFromScreenshot(DataPackageView clipboard)
         {
             if (clipboard.Contains(StandardDataFormats.Bitmap))
             {
@@ -74,54 +166,27 @@ namespace WinAuth.Views
                         string scheme = otpUri.Scheme;
                         if (scheme == "otpauth")
                         {
-                            Debug.WriteLine(otpUri.Host);
-                            Debug.WriteLine(otpUri.Segments[1]);
-                            char[] delimiterChars = { '?', '&' };
-                            string[] querys = otpUri.Query.Split(delimiterChars, StringSplitOptions.RemoveEmptyEntries);
-                            foreach (var query in querys)
-                            {
-                                string[] value = Uri.UnescapeDataString(query).Split('=');
-                                Debug.WriteLine(value[0] + ": " + value[1]);
-                            }
+                            return otpUri;
                         }
                         else
                         {
-                            var dialog = new ContentDialog()
-                            {
-                                Title = "Invalid QR code",
-                                Content = "Found QR code but, it's not OTP QR code. Check your image if it is correct QR code.",
-                                CloseButtonText = "Ok"
-                            };
-                            await dialog.ShowAsync();
+                            throw new Exception("Not a valid otpauth URI");
                         }
                     }
                     catch
                     {
-                        var dialog = new ContentDialog()
-                        {
-                            Title = "Invalid QR code",
-                            Content = "Found QR code but, it's not OTP QR code. Check your image if it is correct QR code.",
-                            CloseButtonText = "Ok"
-                        };
-                        await dialog.ShowAsync();
+                        throw new Exception("Not a valid otpauth URI");
                     }
                 }
                 else
                 {
-                    var dialog = new ContentDialog()
-                    {
-                        Title = "Failed to Detect QR code",
-                        Content = "Cannot found QR Code in captured image. Check your image and try again. Zooming in the QR code could help to detect well",
-                        CloseButtonText = "Ok"
-                    };
-                    await dialog.ShowAsync();
+                    throw new Exception("Failed to detect QR code");
                 }
             }
             else
             {
                 throw new Exception("No screenshot found in clipboard");
             }
-            Clipboard.SetContent(data);
         }
 
         private async Task<DataPackage> DataPackageViewToDataPackage(DataPackageView dataPackageView)
