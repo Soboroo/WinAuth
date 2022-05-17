@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using WinAuth.Utils;
 using AuthInfoStorageLibrary;
+using WinAuth.Views.ContentDialogs;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -28,7 +29,7 @@ namespace WinAuth.Views
             this.InitializeComponent();
         }
 
-        private async void MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
+        private async void AddFromQR_Click(object sender, RoutedEventArgs e)
         {
             DataPackageView currentClipboard = Clipboard.GetContent();
             if (currentClipboard != null)
@@ -223,6 +224,12 @@ namespace WinAuth.Views
                 dataPackage.SetWebLink(webLink);
             }
             return dataPackage;
+        }
+
+        private async void AddManually_Click(object sender, RoutedEventArgs e)
+        {
+            ContentDialog contentDialog = new AddQRManually();
+            await contentDialog.ShowAsync();
         }
     }
 }

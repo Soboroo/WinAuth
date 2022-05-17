@@ -97,6 +97,7 @@ namespace WinAuth
             }
 
             // Login UI
+            // If window has been deactivated after prelaunch screen, Windows Hello UI is never shown
             var ucvAvailability = await UserConsentVerifier.CheckAvailabilityAsync();
             if (ucvAvailability == UserConsentVerifierAvailability.Available)
             {

@@ -1,0 +1,39 @@
+﻿<ContentDialog
+    x:Class="WinAuth.Views.ContentDialogs.AddQRManually"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:WinAuth.Views.ContentDialogs"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="Add Manually"
+    PrimaryButtonText="Add"
+    SecondaryButtonText="Cancel"
+    PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
+    SecondaryButtonClick="ContentDialog_SecondaryButtonClick"
+    PrimaryButtonStyle="{StaticResource AccentButtonStyle}"
+    Style="{StaticResource DefaultContentDialogStyle}">
+
+    <StackPanel>
+        <ComboBox Width="270" Margin="0, 0, 0, 12" x:Name="settingComboBox">
+            <x:String>Basic Setting</x:String>
+            <x:String>Advanced Setting</x:String>
+        </ComboBox>
+        <StackPanel x:Name="basic" Visibility="Collapsed">
+            <TextBlock x:Name="textblock" TextWrapping="Wrap" Margin="0, 0, 0, 8" Text="Account name"/>
+            <TextBox x:Name="textbox" TextWrapping="Wrap" Margin="0, 0, 0, 8" PlaceholderText="John Doe"/>
+            <TextBlock x:Name="textblock2" TextWrapping="Wrap" Margin="0, 0, 0, 8" Text="Account secret"/>
+            <TextBox x:Name="passwordbox" TextWrapping="Wrap" Margin="0, 0, 0, 8" PlaceholderText="123456"/>
+        </StackPanel>
+        <StackPanel x:Name="advanced" Visibility="Visible">
+            <TextBlock x:Name="textblock3" TextWrapping="Wrap" Margin="0, 0, 0, 8" Text="Account name"/>
+            <TextBox x:Name="textbox2" TextWrapping="Wrap" Margin="0, 0, 0, 8" PlaceholderText="John Doe"/>
+            <TextBlock x:Name="textblock4" TextWrapping="Wrap" Margin="0, 0, 0, 8" Text="Account secret"/>
+            <TextBox x:Name="passwordbox2" TextWrapping="Wrap" Margin="0, 0, 0, 8" PlaceholderText="123456"/>
+            <TextBlock x:Name="textblock5" TextWrapping="Wrap" Margin="0, 0, 0, 8" Text="Account secret"/>
+            <TextBox x:Name="passwordbox3" TextWrapping="Wrap" Margin="0, 0, 0, 8" PlaceholderText="123456"/>
+            <TextBlock x:Name="textblock6" TextWrapping="Wrap" Margin="0, 0, 0, 8" Text="Account secret"/>
+            <TextBox x:Name="passwordbox4" TextWrapping="Wrap" Margin="0, 0, 0, 8" PlaceholderText="123456"/>
+        </StackPanel>
+    </StackPanel>
+</ContentDialog>

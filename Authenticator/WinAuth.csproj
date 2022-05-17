@@ -132,6 +132,10 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\QRDecodeHelper.cs" />
+    <Compile Include="Views\ContentDialogs\AddQRManually.xaml.cs">
+      <DependentUpon>AddQRManually.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ContentDialogs\OTPInputRule.cs" />
     <Compile Include="Views\HomePage.xaml.cs">
       <DependentUpon>HomePage.xaml</DependentUpon>
     </Compile>
@@ -173,6 +177,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Resources\NavViewContentStyle.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ContentDialogs\AddQRManually.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

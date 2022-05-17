@@ -18,8 +18,8 @@
             <AppBarButton Icon="Add" Label="Add">
                 <AppBarButton.Flyout>
                     <MenuFlyout>
-                        <MenuFlyoutItem Text="Add from QR Code" Icon="Camera" Click="MenuFlyoutItem_Click"/>
-                        <MenuFlyoutItem Text="Add from Manual Entry" Icon="Edit"/>
+                        <MenuFlyoutItem Text="Add from QR Code" Icon="Camera" Click="AddFromQR_Click"/>
+                        <MenuFlyoutItem Text="Add from Manual Entry" Icon="Edit" Click="AddManually_Click"/>
                     </MenuFlyout>
                 </AppBarButton.Flyout>
             </AppBarButton>
