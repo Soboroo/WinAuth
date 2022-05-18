@@ -19,6 +19,7 @@ using AuthInfoStorageLibrary;
 using Windows.Security.Credentials.UI;
 using Windows.Security.Credentials;
 using System.Diagnostics;
+using System.Security.Cryptography;
 
 namespace WinAuth
 {
@@ -46,10 +47,11 @@ namespace WinAuth
             catch (Exception)
             {
                 Debug.WriteLine("No access token found");
-                var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-                var random = new Random();
-                var result = new string(Enumerable.Repeat(characters, 128)
-                  .Select(s => s[random.Next(s.Length)]).ToArray());
+                RandomNumberGenerator generator = RandomNumberGenerator.Create();
+                byte[] bytes = new byte[128];
+                generator.GetBytes(bytes);
+                string result = Convert.ToBase64String(bytes);
+                Debug.WriteLine("Generated access token: " + result);
                 vault.Add(new PasswordCredential("WinAuth", "Access Token", result));
             }
 
