@@ -159,7 +159,7 @@ namespace WinAuth.Views
             {
                 RandomAccessStreamReference bitmap = await clipboard.GetBitmapAsync();
                 string result = await QRDecodeHelper.GetQRInfoFromBitmap(bitmap);
-                if (result != null && result.Length > 0)
+                if (string.IsNullOrEmpty(result))
                 {
                     try
                     {
