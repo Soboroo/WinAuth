@@ -135,7 +135,6 @@
     <Compile Include="Views\ContentDialogs\AddQRManually.xaml.cs">
       <DependentUpon>AddQRManually.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\ContentDialogs\OTPInputRule.cs" />
     <Compile Include="Views\HomePage.xaml.cs">
       <DependentUpon>HomePage.xaml</DependentUpon>
     </Compile>

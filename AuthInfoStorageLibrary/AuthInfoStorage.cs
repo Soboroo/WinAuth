@@ -59,6 +59,27 @@ namespace AuthInfoStorageLibrary
             using (SqliteConnection connection = new SqliteConnection(connectionString))
             {
                 connection.Open();
+                SqliteTransaction transaction = connection.BeginTransaction();
+
+                SqliteCommand command = connection.CreateCommand();
+                command.Transaction = transaction;
+
+                command.Connection = connection;
+                
+                command.CommandText = "INSERT INTO otp_list (label, type, secret, issuer, algorithm, digits, counter, period) " +
+                                      "VALUES (@label, @type, @secret, @issuer, @algorithm, @digits, @counter, @period);";
+                command.Parameters.AddWithValue("@label", otp.Label);
+                command.Parameters.AddWithValue("@type", otp.Type);
+                command.Parameters.AddWithValue("@secret", otp.Secret);
+                command.Parameters.AddWithValue("@issuer", otp.Issuer ?? otp.Label.Split(':')[0]);
+                command.Parameters.AddWithValue("@algorithm", otp.Algorithm);
+                command.Parameters.AddWithValue("@digits", String.IsNullOrEmpty(otp.Digits) ? "6" : otp.Digits);
+                command.Parameters.AddWithValue("@counter", String.IsNullOrEmpty(otp.Counter) ? "0" : otp.Counter);
+                command.Parameters.AddWithValue("@period", String.IsNullOrEmpty(otp.Period) ? "30" : otp.Period);
+
+                command.ExecuteNonQuery();
+                transaction.Commit();
+                /*
 
                 SqliteCommand insertCommand = new SqliteCommand();
                 insertCommand.Connection = connection;
@@ -70,12 +91,13 @@ namespace AuthInfoStorageLibrary
                 insertCommand.Parameters.AddWithValue("@secret", otp.Secret);
                 insertCommand.Parameters.AddWithValue("@issuer", otp.Issuer ?? otp.Label.Split(':')[0]);
                 insertCommand.Parameters.AddWithValue("@algorithm", otp.Algorithm);
-                insertCommand.Parameters.AddWithValue("@digits", otp.Digits);
-                insertCommand.Parameters.AddWithValue("@counter", otp.Counter);
-                insertCommand.Parameters.AddWithValue("@period", otp.Period);
+                insertCommand.Parameters.AddWithValue("@digits", String.IsNullOrEmpty(otp.Digits) ? "6" : otp.Digits);
+                insertCommand.Parameters.AddWithValue("@counter", String.IsNullOrEmpty(otp.Counter) ? "0" : otp.Counter);
+                insertCommand.Parameters.AddWithValue("@period", String.IsNullOrEmpty(otp.Period) ? "30" : otp.Period);
 
                 insertCommand.ExecuteNonQuery();
                 connection.Close();
+                */
             }
         }
     }
