@@ -23,7 +23,7 @@
         </ComboBox>
         <StackPanel x:Name="basic" Visibility="Visible">
             <TextBlock TextWrapping="Wrap" Margin="0, 0, 0, 8" Text="Account name"/>
-            <TextBox x:Name="basicLabel" TextWrapping="Wrap" Margin="0, 0, 0, 8" PlaceholderText="ex) John Doe (Required)" ui:TextBoxExtensions.Regex=".+"/>
+            <TextBox x:Name="basicAccountName" TextWrapping="Wrap" Margin="0, 0, 0, 8" PlaceholderText="ex) John Doe (Required)" ui:TextBoxExtensions.Regex=".+"/>
             <TextBlock TextWrapping="Wrap" Margin="0, 0, 0, 8" Text="Secret Key"/>
             <TextBox x:Name="basicSecret" TextWrapping="Wrap" Margin="0, 0, 0, 8" PlaceholderText="(Required)" ui:TextBoxExtensions.Regex=".+"/>
         </StackPanel>

@@ -8,7 +8,7 @@ namespace AuthInfoStorageLibrary
 {
     public class OTPInfo
     {
-        private string _label;
+        private string _accountName;
         private string _type;
         private string _secret;
         private string _issuer;
@@ -17,7 +17,7 @@ namespace AuthInfoStorageLibrary
         private string _period = "30";
         private string _counter = "0";
 
-        public string Label { get { return _label; } set { _label = value; } }
+        public string AccountName { get { return _accountName; } set { _accountName = value; } }
         public string Type 
         { 
             get { return _type; } 

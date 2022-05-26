@@ -22,7 +22,7 @@ namespace WinAuth.Views
     /// </summary>
     public sealed partial class OTPPage : Page
     {
-        private DataPackage data;
+        private DataPackageView data;
         
         public OTPPage()
         {
@@ -34,7 +34,7 @@ namespace WinAuth.Views
             DataPackageView currentClipboard = Clipboard.GetContent();
             if (currentClipboard != null)
             {
-                data = await DataPackageViewToDataPackage(currentClipboard);
+                data = currentClipboard;
             }
             Clipboard.Clear();
             bool result = await Windows.System.Launcher.LaunchUriAsync(new Uri("ms-screenclip:snip?source=WinAuth"));
@@ -114,7 +114,17 @@ namespace WinAuth.Views
             finally
             {
                 // restore clipboard
-                Clipboard.SetContent(data);
+                if (data != null)
+                {
+                    try
+                    {
+                        Clipboard.SetContent(await DataPackageViewToDataPackage(data));
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine(ex.Message);
+                    }
+                }
             }
         }
         
@@ -122,7 +132,8 @@ namespace WinAuth.Views
         {
             OTPInfo otpInfo = new OTPInfo();
             otpInfo.Type = Uri.UnescapeDataString(otpUri.Host);
-            otpInfo.Label = Uri.UnescapeDataString(otpUri.Segments[1]);
+            otpInfo.AccountName = Uri.UnescapeDataString(otpUri.Segments[1].Split(':').Length > 1 ? otpUri.Segments[1].Split(':')[1] : otpUri.Segments[1]);
+            otpInfo.Issuer = Uri.UnescapeDataString(otpUri.Segments[1].Split(':').Length > 1 ? otpUri.Segments[1].Split(':')[0] : otpUri.Segments[1]);
             char[] delimiterChars = { '?', '&' };
             string[] querys = Uri.UnescapeDataString(otpUri.Query).Split(delimiterChars, StringSplitOptions.RemoveEmptyEntries);
             foreach (var query in querys)
@@ -159,7 +170,7 @@ namespace WinAuth.Views
             {
                 RandomAccessStreamReference bitmap = await clipboard.GetBitmapAsync();
                 string result = await QRDecodeHelper.GetQRInfoFromBitmap(bitmap);
-                if (string.IsNullOrEmpty(result))
+                if (!string.IsNullOrEmpty(result))
                 {
                     try
                     {

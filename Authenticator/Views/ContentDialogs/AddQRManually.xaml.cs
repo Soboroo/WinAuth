@@ -27,7 +27,7 @@ namespace WinAuth.Views.ContentDialogs
             settingComboBox.SelectionChanged += SettingComboBox_SelectionChanged;
             advancedType.SelectionChanged += AdvancedType_SelectionChanged;
 
-            basicLabel.TextChanged += Validation;
+            basicAccountName.TextChanged += Validation;
             basicSecret.TextChanged += Validation;
 
             advancedName.TextChanged += Validation;
@@ -44,7 +44,8 @@ namespace WinAuth.Views.ContentDialogs
             if (settingComboBox.SelectedIndex == 0)
             {
                 info.Type = "totp";
-                info.Label = basicLabel.Text;
+                info.AccountName = basicAccountName.Text;
+                info.Issuer = basicAccountName.Text;
                 info.Secret = basicSecret.Text;
             }
             else
@@ -59,14 +60,14 @@ namespace WinAuth.Views.ContentDialogs
                 }
                 if (advancedIssuer.Text.Length == 0)
                 {
-                    info.Label = advancedName.Text + ":" + advancedSecret.Text;
                     info.Issuer = advancedName.Text;
                 }
                 else
                 {
-                    info.Label = advancedIssuer.Text + ":" + advancedName.Text;
                     info.Issuer = advancedIssuer.Text;
                 }
+
+                info.AccountName = advancedName.Text;
                 info.Secret = advancedSecret.Text;
                 info.Digits = advancedDigits.Text;
                 info.Period = advancedPeriod.Text;
@@ -129,7 +130,7 @@ namespace WinAuth.Views.ContentDialogs
 
         private void BasicSetting_Validation()
         {
-            if (TextBoxExtensions.GetIsValid(basicLabel) && TextBoxExtensions.GetIsValid(basicSecret))
+            if (TextBoxExtensions.GetIsValid(basicAccountName) && TextBoxExtensions.GetIsValid(basicSecret))
             {
                 this.IsPrimaryButtonEnabled = true;
             }
@@ -176,7 +177,7 @@ namespace WinAuth.Views.ContentDialogs
 
         private void BasicSetting_Reset()
         {
-            basicLabel.Text = "";
+            basicAccountName.Text = "";
             basicSecret.Text = "";
             this.IsPrimaryButtonEnabled = false;
         }

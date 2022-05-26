@@ -31,7 +31,7 @@ namespace AuthInfoStorageLibrary
                 var command = connection.CreateCommand();
                 command.CommandText = "CREATE TABLE if not EXISTS otp_list (" +
                                         "Primary_Key INTEGER PRIMARY KEY AUTOINCREMENT," +
-                                        "label TEXT NOT NULL," +
+                                        "accountname TEXT NOT NULL," +
                                         "type TEXT NOT NULL," +
                                         "secret TEXT NOT NULL," +
                                         "issuer TEXT," +
@@ -49,7 +49,7 @@ namespace AuthInfoStorageLibrary
         
         public static void AddOTPInfoToStorage(OTPInfo otp)
         {
-            if (otp.Label == null || otp.Label.Length == 0)
+            if (otp.AccountName == null || otp.AccountName.Length == 0)
                 throw new ArgumentNullException("Label cannot be null");
             if (otp.Type == null || otp.Type.Length == 0)
                 throw new ArgumentNullException("Type cannot be null");
@@ -66,12 +66,12 @@ namespace AuthInfoStorageLibrary
 
                 command.Connection = connection;
                 
-                command.CommandText = "INSERT INTO otp_list (label, type, secret, issuer, algorithm, digits, counter, period) " +
-                                      "VALUES (@label, @type, @secret, @issuer, @algorithm, @digits, @counter, @period);";
-                command.Parameters.AddWithValue("@label", otp.Label);
+                command.CommandText = "INSERT INTO otp_list (accountname, type, secret, issuer, algorithm, digits, counter, period) " +
+                                      "VALUES (@accountname, @type, @secret, @issuer, @algorithm, @digits, @counter, @period);";
+                command.Parameters.AddWithValue("@accountname", otp.AccountName);
                 command.Parameters.AddWithValue("@type", otp.Type);
                 command.Parameters.AddWithValue("@secret", otp.Secret);
-                command.Parameters.AddWithValue("@issuer", otp.Issuer ?? otp.Label.Split(':')[0]);
+                command.Parameters.AddWithValue("@issuer", otp.Issuer);
                 command.Parameters.AddWithValue("@algorithm", otp.Algorithm);
                 command.Parameters.AddWithValue("@digits", String.IsNullOrEmpty(otp.Digits) ? "6" : otp.Digits);
                 command.Parameters.AddWithValue("@counter", String.IsNullOrEmpty(otp.Counter) ? "0" : otp.Counter);
@@ -79,6 +79,7 @@ namespace AuthInfoStorageLibrary
 
                 command.ExecuteNonQuery();
                 transaction.Commit();
+                connection.Close();
                 /*
 
                 SqliteCommand insertCommand = new SqliteCommand();
