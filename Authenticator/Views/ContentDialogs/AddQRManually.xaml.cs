@@ -74,7 +74,8 @@ namespace WinAuth.Views.ContentDialogs
                 info.Counter = advancedCounter.Text;
                 info.Algorithm = advancedAlgorithm.SelectedItem.ToString();
             }
-            AuthInfoStorage.AddOTPInfoToStorage(info);
+            AuthInfoStorage authInfoStorage = AuthInfoStorage.Instance;
+            authInfoStorage.AddOTPInfoToStorage(info);
         }
 
         private void ContentDialog_SecondaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)

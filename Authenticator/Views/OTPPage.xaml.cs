@@ -35,7 +35,8 @@ namespace WinAuth.Views
 
         private void OTPPage_Loaded(object sender, RoutedEventArgs e)
         {
-            otpList = new ObservableCollection<OTPInfo>(AuthInfoStorage.GetOTPInfoFromStorage());
+            AuthInfoStorage authInfoStorage = AuthInfoStorage.Instance;
+            otpList = new ObservableCollection<OTPInfo>(authInfoStorage.GetOTPInfoFromStorage());
             otpListView.ItemsSource = otpList;
         }
 
@@ -74,13 +75,14 @@ namespace WinAuth.Views
 
         private async void AddOTPInfo(DataPackageView clipboard)
         {
+            AuthInfoStorage authInfoStorage = AuthInfoStorage.Instance;
             try
             {
                 Uri otpUri = await GetOTPUriFromScreenshot(clipboard);
                 OTPInfo info = GetOTPInfoFromUri(otpUri);
                 try
                 {
-                    AuthInfoStorage.AddOTPInfoToStorage(info);
+                    authInfoStorage.AddOTPInfoToStorage(info);
                 }
                 catch (Exception ex)
                 {

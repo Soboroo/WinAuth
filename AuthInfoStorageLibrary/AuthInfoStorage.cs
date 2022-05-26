@@ -6,27 +6,34 @@ using Windows.Security.Credentials;
 using System.Diagnostics;
 using OtpNet;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 
 namespace AuthInfoStorageLibrary
 {
-    public static class AuthInfoStorage
+    public class AuthInfoStorage
     {
-        static string connectionString;
-        public static void InitializeDatabase()
+        private static readonly AuthInfoStorage instance = new AuthInfoStorage();
+
+        private readonly SqliteConnection connection;
+
+        private AuthInfoStorage()
         {
             PasswordVault vault = new PasswordVault();
-            var credential = vault.Retrieve("WinAuth", "Access Token");
-            credential.RetrievePassword();
-
-            connectionString = new SqliteConnectionStringBuilder
+            try
             {
-                DataSource = Path.Combine(ApplicationData.Current.LocalFolder.Path, "AuthInfoDatabase.db"),
-                Mode = SqliteOpenMode.ReadWriteCreate,
-                Password = credential.Password
-            }.ToString();
+                var credential = vault.Retrieve("WinAuth", "Access Token");
+                credential.RetrievePassword();
+                Debug.WriteLine("Access Token: " + credential.Password);
 
-            using (var connection = new SqliteConnection(connectionString))
-            {
+                string connectionString = new SqliteConnectionStringBuilder
+                {
+                    DataSource = Path.Combine(ApplicationData.Current.LocalFolder.Path, "AuthInfoDatabase.db"),
+                    Mode = SqliteOpenMode.ReadWriteCreate,
+                    Password = credential.Password
+                }.ToString();
+
+                connection = new SqliteConnection(connectionString);
+
                 connection.Open();
 
                 var command = connection.CreateCommand();
@@ -43,12 +50,30 @@ namespace AuthInfoStorageLibrary
                                         "added_time DATETIME DEFAULT CURRENT_TIMESTAMP" +
                                       "); ";
                 command.ExecuteNonQuery();
+            }
+            catch (Exception)
+            {
+                Debug.WriteLine("No access token found");
+                RandomNumberGenerator generator = RandomNumberGenerator.Create();
+                byte[] bytes = new byte[128];
+                generator.GetBytes(bytes);
+                string result = Convert.ToBase64String(bytes);
+                Debug.WriteLine("Generated access token: " + result);
+                vault.Add(new PasswordCredential("WinAuth", "Access Token", result));
+            }
 
-                connection.Close();
+
+        }
+
+        public static AuthInfoStorage Instance
+        {
+            get
+            {
+                return instance;
             }
         }
-        
-        public static void AddOTPInfoToStorage(OTPInfo otp)
+
+        public void AddOTPInfoToStorage(OTPInfo otp)
         {
             if (otp.AccountName == null || otp.AccountName.Length == 0)
                 throw new ArgumentNullException("Label cannot be null");
@@ -57,74 +82,47 @@ namespace AuthInfoStorageLibrary
             if (otp.Secret == null || otp.Secret.Length == 0)
                 throw new ArgumentNullException("Secret cannot be null");
 
-            using (SqliteConnection connection = new SqliteConnection(connectionString))
-            {
-                connection.Open();
-                SqliteTransaction transaction = connection.BeginTransaction();
 
-                SqliteCommand command = connection.CreateCommand();
-                command.Transaction = transaction;
+            SqliteTransaction transaction = connection.BeginTransaction();
 
-                command.Connection = connection;
-                
-                command.CommandText = "INSERT INTO otp_list (accountname, type, secret, issuer, algorithm, digits, counter, period) " +
-                                      "VALUES (@accountname, @type, @secret, @issuer, @algorithm, @digits, @counter, @period);";
-                command.Parameters.AddWithValue("@accountname", otp.AccountName);
-                command.Parameters.AddWithValue("@type", otp.Type);
-                command.Parameters.AddWithValue("@secret", otp.Secret);
-                command.Parameters.AddWithValue("@issuer", otp.Issuer);
-                command.Parameters.AddWithValue("@algorithm", otp.Algorithm);
-                command.Parameters.AddWithValue("@digits", String.IsNullOrEmpty(otp.Digits) ? "6" : otp.Digits);
-                command.Parameters.AddWithValue("@counter", String.IsNullOrEmpty(otp.Counter) ? "0" : otp.Counter);
-                command.Parameters.AddWithValue("@period", String.IsNullOrEmpty(otp.Period) ? "30" : otp.Period);
+            SqliteCommand command = connection.CreateCommand();
+            command.Transaction = transaction;
 
-                command.ExecuteNonQuery();
-                transaction.Commit();
-                connection.Close();
-                /*
+            command.Connection = connection;
 
-                SqliteCommand insertCommand = new SqliteCommand();
-                insertCommand.Connection = connection;
+            command.CommandText = "INSERT INTO otp_list (accountname, type, secret, issuer, algorithm, digits, counter, period) " +
+                                  "VALUES (@accountname, @type, @secret, @issuer, @algorithm, @digits, @counter, @period);";
+            command.Parameters.AddWithValue("@accountname", otp.AccountName);
+            command.Parameters.AddWithValue("@type", otp.Type);
+            command.Parameters.AddWithValue("@secret", otp.Secret);
+            command.Parameters.AddWithValue("@issuer", otp.Issuer);
+            command.Parameters.AddWithValue("@algorithm", otp.Algorithm);
+            command.Parameters.AddWithValue("@digits", String.IsNullOrEmpty(otp.Digits) ? "6" : otp.Digits);
+            command.Parameters.AddWithValue("@counter", String.IsNullOrEmpty(otp.Counter) ? "0" : otp.Counter);
+            command.Parameters.AddWithValue("@period", String.IsNullOrEmpty(otp.Period) ? "30" : otp.Period);
 
-                insertCommand.CommandText = "INSERT INTO otp_list (label, type, secret, issuer, algorithm, digits, counter, period) " +
-                                            "VALUES (@label, @type, @secret, @issuer, @algorithm, @digits, @counter, @period);";
-                insertCommand.Parameters.AddWithValue("@label", otp.Label);
-                insertCommand.Parameters.AddWithValue("@type", otp.Type);
-                insertCommand.Parameters.AddWithValue("@secret", otp.Secret);
-                insertCommand.Parameters.AddWithValue("@issuer", otp.Issuer ?? otp.Label.Split(':')[0]);
-                insertCommand.Parameters.AddWithValue("@algorithm", otp.Algorithm);
-                insertCommand.Parameters.AddWithValue("@digits", String.IsNullOrEmpty(otp.Digits) ? "6" : otp.Digits);
-                insertCommand.Parameters.AddWithValue("@counter", String.IsNullOrEmpty(otp.Counter) ? "0" : otp.Counter);
-                insertCommand.Parameters.AddWithValue("@period", String.IsNullOrEmpty(otp.Period) ? "30" : otp.Period);
+            command.ExecuteNonQuery();
+            transaction.Commit();
 
-                insertCommand.ExecuteNonQuery();
-                connection.Close();
-                */
-            }
         }
 
-        public static void RemoveOTPInfoFromStorage(string accountName)
+        public void RemoveOTPInfoFromStorage(string accountName)
         {
-            using (SqliteConnection connection = new SqliteConnection(connectionString))
-            {
-                connection.Open();
-                SqliteTransaction transaction = connection.BeginTransaction();
+            SqliteTransaction transaction = connection.BeginTransaction();
 
-                SqliteCommand command = connection.CreateCommand();
-                command.Transaction = transaction;
+            SqliteCommand command = connection.CreateCommand();
+            command.Transaction = transaction;
 
-                command.Connection = connection;
+            command.Connection = connection;
 
-                command.CommandText = "DELETE FROM otp_list WHERE accountname = @accountname;";
-                command.Parameters.AddWithValue("@accountname", accountName);
+            command.CommandText = "DELETE FROM otp_list WHERE accountname = @accountname;";
+            command.Parameters.AddWithValue("@accountname", accountName);
 
-                command.ExecuteNonQuery();
-                transaction.Commit();
-                connection.Close();
-            }
+            command.ExecuteNonQuery();
+            transaction.Commit();
         }
 
-        public static void UpdateOTPInfoInStorage(OTPInfo otp)
+        public void UpdateOTPInfoInStorage(OTPInfo otp)
         {
             if (otp.AccountName == null || otp.AccountName.Length == 0)
                 throw new ArgumentNullException("Label cannot be null");
@@ -133,60 +131,49 @@ namespace AuthInfoStorageLibrary
             if (otp.Secret == null || otp.Secret.Length == 0)
                 throw new ArgumentNullException("Secret cannot be null");
 
-            using (SqliteConnection connection = new SqliteConnection(connectionString))
-            {
-                connection.Open();
-                SqliteTransaction transaction = connection.BeginTransaction();
+            SqliteTransaction transaction = connection.BeginTransaction();
 
-                SqliteCommand command = connection.CreateCommand();
-                command.Transaction = transaction;
+            SqliteCommand command = connection.CreateCommand();
+            command.Transaction = transaction;
 
-                command.Connection = connection;
+            command.Connection = connection;
 
-                command.CommandText = "UPDATE otp_list SET accountname = @accountname, type = @type, secret = @secret, issuer = @issuer, algorithm = @algorithm, digits = @digits, counter = @counter, period = @period WHERE accountname = @accountname;";
-                command.Parameters.AddWithValue("@accountname", otp.AccountName);
-                command.Parameters.AddWithValue("@type", otp.Type);
-                command.Parameters.AddWithValue("@secret", otp.Secret);
-                command.Parameters.AddWithValue("@issuer", otp.Issuer);
-                command.Parameters.AddWithValue("@algorithm", otp.Algorithm);
-                command.Parameters.AddWithValue("@digits", String.IsNullOrEmpty(otp.Digits) ? "6" : otp.Digits);
-                command.Parameters.AddWithValue("@counter", String.IsNullOrEmpty(otp.Counter) ? "0" : otp.Counter);
-                command.Parameters.AddWithValue("@period", String.IsNullOrEmpty(otp.Period) ? "30" : otp.Period);
+            command.CommandText = "UPDATE otp_list SET accountname = @accountname, type = @type, secret = @secret, issuer = @issuer, algorithm = @algorithm, digits = @digits, counter = @counter, period = @period WHERE accountname = @accountname;";
+            command.Parameters.AddWithValue("@accountname", otp.AccountName);
+            command.Parameters.AddWithValue("@type", otp.Type);
+            command.Parameters.AddWithValue("@secret", otp.Secret);
+            command.Parameters.AddWithValue("@issuer", otp.Issuer);
+            command.Parameters.AddWithValue("@algorithm", otp.Algorithm);
+            command.Parameters.AddWithValue("@digits", String.IsNullOrEmpty(otp.Digits) ? "6" : otp.Digits);
+            command.Parameters.AddWithValue("@counter", String.IsNullOrEmpty(otp.Counter) ? "0" : otp.Counter);
+            command.Parameters.AddWithValue("@period", String.IsNullOrEmpty(otp.Period) ? "30" : otp.Period);
 
-                command.ExecuteNonQuery();
-                transaction.Commit();
-                connection.Close();
-            }
+            command.ExecuteNonQuery();
+            transaction.Commit();
         }
 
-        public static List<OTPInfo> GetOTPInfoFromStorage()
+        public List<OTPInfo> GetOTPInfoFromStorage()
         {
             List<OTPInfo> otpList = new List<OTPInfo>();
+            SqliteCommand command = new SqliteCommand();
+            command.Connection = connection;
 
-            using (SqliteConnection connection = new SqliteConnection(connectionString))
+            command.CommandText = "SELECT * FROM otp_list;";
+
+            SqliteDataReader reader = command.ExecuteReader();
+            while (reader.Read())
             {
-                connection.Open();
-                SqliteCommand command = new SqliteCommand();
-                command.Connection = connection;
+                OTPInfo otp = new OTPInfo();
+                otp.AccountName = reader["accountname"].ToString();
+                otp.Type = reader["type"].ToString();
+                otp.Secret = reader["secret"].ToString();
+                otp.Issuer = reader["issuer"].ToString();
+                otp.Algorithm = reader["algorithm"].ToString();
+                otp.Digits = reader["digits"].ToString();
+                otp.Counter = reader["counter"].ToString();
+                otp.Period = reader["period"].ToString();
 
-                command.CommandText = "SELECT * FROM otp_list;";
-
-                SqliteDataReader reader = command.ExecuteReader();
-                while (reader.Read())
-                {
-                    OTPInfo otp = new OTPInfo();
-                    otp.AccountName = reader["accountname"].ToString();
-                    otp.Type = reader["type"].ToString();
-                    otp.Secret = reader["secret"].ToString();
-                    otp.Issuer = reader["issuer"].ToString();
-                    otp.Algorithm = reader["algorithm"].ToString();
-                    otp.Digits = reader["digits"].ToString();
-                    otp.Counter = reader["counter"].ToString();
-                    otp.Period = reader["period"].ToString();
-
-                    otpList.Add(otp);
-                }
-                connection.Close();
+                otpList.Add(otp);
             }
 
             return otpList;

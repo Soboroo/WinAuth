@@ -36,26 +36,7 @@ namespace WinAuth
         {
             this.InitializeComponent();
             this.Suspending += OnSuspending;
-
-            PasswordVault vault = new PasswordVault();
-            try
-            {
-                var credential = vault.Retrieve("WinAuth", "Access Token");
-                credential.RetrievePassword();
-                Debug.WriteLine("Access Token: " + credential.Password);
-            }
-            catch (Exception)
-            {
-                Debug.WriteLine("No access token found");
-                RandomNumberGenerator generator = RandomNumberGenerator.Create();
-                byte[] bytes = new byte[128];
-                generator.GetBytes(bytes);
-                string result = Convert.ToBase64String(bytes);
-                Debug.WriteLine("Generated access token: " + result);
-                vault.Add(new PasswordCredential("WinAuth", "Access Token", result));
-            }
-
-            AuthInfoStorage.InitializeDatabase();
+            _ = AuthInfoStorage.Instance; // For initialize the singleton
         }
 
         /// <summary>
