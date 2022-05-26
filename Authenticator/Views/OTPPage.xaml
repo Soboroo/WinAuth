@@ -23,7 +23,32 @@
                     </MenuFlyout>
                 </AppBarButton.Flyout>
             </AppBarButton>
-
         </CommandBar>
+        <GridView Grid.Row="1" x:Name="otpListView" Margin="0, 30, 0, 0">
+            <GridView.ItemTemplate>
+                <DataTemplate>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="{Binding AccountName}" FontSize="28" FontWeight="SemiBold" Margin="0,0,0,12" Grid.Row="0"/>
+                        <TextBlock Text="{Binding Type}" FontSize="14" Margin="0,0,0,12" Grid.Row="1"/>
+                        <TextBlock Text="{Binding Secret}" FontSize="14" Margin="0,0,0,12" Grid.Row="2"/>
+                        <TextBlock Text="{Binding Issuer}" FontSize="14" Margin="0,0,0,12" Grid.Row="3"/>
+                    </Grid>
+                </DataTemplate>
+            </GridView.ItemTemplate>
+            <GridView.ItemContainerStyle>
+                <Style TargetType="GridViewItem" BasedOn="{StaticResource DefaultGridViewItemStyle}">
+                    <Setter Property="Background" Value="Gray"/>
+                    <Setter Property="Margin" Value="0, 0, 10, 10"/>
+                    <Setter Property="Padding" Value="8, 8, 8, 8"/>
+                </Style>
+            </GridView.ItemContainerStyle>
+            
+        </GridView>
     </Grid>
 </Page>

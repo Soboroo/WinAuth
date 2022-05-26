@@ -8,6 +8,7 @@ using Windows.UI.Core;
 using Windows.Graphics.Imaging;
 using Windows.Storage.Streams;
 using System.Threading.Tasks;
+using System.Collections.ObjectModel;
 using Windows.Storage;
 using WinAuth.Utils;
 using AuthInfoStorageLibrary;
@@ -23,10 +24,19 @@ namespace WinAuth.Views
     public sealed partial class OTPPage : Page
     {
         private DataPackageView data;
-        
+        private ObservableCollection<OTPInfo> otpList = new ObservableCollection<OTPInfo>();
+
         public OTPPage()
         {
             this.InitializeComponent();
+
+            this.Loaded += OTPPage_Loaded; ;
+        }
+
+        private void OTPPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            otpList = new ObservableCollection<OTPInfo>(AuthInfoStorage.GetOTPInfoFromStorage());
+            otpListView.ItemsSource = otpList;
         }
 
         private async void AddFromQR_Click(object sender, RoutedEventArgs e)
