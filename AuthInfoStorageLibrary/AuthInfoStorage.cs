@@ -19,37 +19,12 @@ namespace AuthInfoStorageLibrary
         private AuthInfoStorage()
         {
             PasswordVault vault = new PasswordVault();
+            PasswordCredential credential;
             try
             {
-                var credential = vault.Retrieve("WinAuth", "Access Token");
+                credential = vault.Retrieve("WinAuth", "Access Token");
                 credential.RetrievePassword();
                 Debug.WriteLine("Access Token: " + credential.Password);
-
-                string connectionString = new SqliteConnectionStringBuilder
-                {
-                    DataSource = Path.Combine(ApplicationData.Current.LocalFolder.Path, "AuthInfoDatabase.db"),
-                    Mode = SqliteOpenMode.ReadWriteCreate,
-                    Password = credential.Password
-                }.ToString();
-
-                connection = new SqliteConnection(connectionString);
-
-                connection.Open();
-
-                var command = connection.CreateCommand();
-                command.CommandText = "CREATE TABLE if not EXISTS otp_list (" +
-                                        "Primary_Key INTEGER PRIMARY KEY AUTOINCREMENT," +
-                                        "accountname TEXT NOT NULL," +
-                                        "type TEXT NOT NULL," +
-                                        "secret TEXT NOT NULL," +
-                                        "issuer TEXT," +
-                                        "algorithm TEXT DEFAULT 'SHA1'," +
-                                        "digits INTEGER DEFAULT 6," +
-                                        "counter INTEGER DEFAULT 0," +
-                                        "period INTEGER DEFAULT 30," +
-                                        "added_time DATETIME DEFAULT CURRENT_TIMESTAMP" +
-                                      "); ";
-                command.ExecuteNonQuery();
             }
             catch (Exception)
             {
@@ -60,9 +35,39 @@ namespace AuthInfoStorageLibrary
                 string result = Convert.ToBase64String(bytes);
                 Debug.WriteLine("Generated access token: " + result);
                 vault.Add(new PasswordCredential("WinAuth", "Access Token", result));
+                credential = vault.Retrieve("WinAuth", "Access Token");
             }
 
+            string connectionString = new SqliteConnectionStringBuilder
+            {
+                DataSource = Path.Combine(ApplicationData.Current.LocalFolder.Path, "AuthInfoDatabase.db"),
+                Mode = SqliteOpenMode.ReadWriteCreate,
+                Password = credential.Password
+            }.ToString();
 
+            connection = new SqliteConnection(connectionString);
+
+            connection.Open();
+
+            var command = connection.CreateCommand();
+            command.CommandText = "CREATE TABLE if not EXISTS otp_list (" +
+                                    "Primary_Key INTEGER PRIMARY KEY AUTOINCREMENT," +
+                                    "accountname TEXT NOT NULL," +
+                                    "type TEXT NOT NULL," +
+                                    "secret TEXT NOT NULL," +
+                                    "issuer TEXT," +
+                                    "algorithm TEXT DEFAULT 'SHA1'," +
+                                    "digits INTEGER DEFAULT 6," +
+                                    "counter INTEGER DEFAULT 0," +
+                                    "period INTEGER DEFAULT 30," +
+                                    "added_time DATETIME DEFAULT CURRENT_TIMESTAMP" +
+                                  "); ";
+            command.ExecuteNonQuery();
+        }
+
+        ~AuthInfoStorage()
+        {
+            connection.Close();
         }
 
         public static AuthInfoStorage Instance
